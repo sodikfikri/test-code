@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\OrderController;
 
 /*
 |--------------------------------------------------------------------------
@@ -15,4 +16,12 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return view('product');
-});
+})->name('main');
+// Route::get('/order', function () {
+//     return view('order');
+// })->name('order');
+
+Route::get('/order', [OrderController::class, 'index'])->name('order');
+Route::post('/create_data', [OrderController::class, 'create_data'])->name('create-data');
+Route::post('/update_data', [OrderController::class, 'update_data'])->name('update-data');
+Route::post('/delete_data', [OrderController::class, 'delete_data'])->name('delete-data');

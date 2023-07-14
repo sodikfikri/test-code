@@ -1,3 +1,7 @@
+@php
+    $session_error = Session::get('error');
+    $session_success = Session::get('success');
+@endphp
 <!DOCTYPE html>
 <html lang="en">
 
@@ -294,11 +298,11 @@
   <main id="main" class="main">
 
     <div class="pagetitle">
-      <h1>Produk</h1>
+      <h1>Pesanan</h1>
       <nav>
         <ol class="breadcrumb">
           <li class="breadcrumb-item"><a href="index.html">Home</a></li>
-          <li class="breadcrumb-item">Produk</li>
+          <li class="breadcrumb-item">Pesanan</li>
           {{-- <li class="breadcrumb-item active">Data</li> --}}
         </ol>
       </nav>
@@ -312,31 +316,53 @@
             <div class="card-body">
             <div class="row">
                 <div class="col-6">
-                    <h5 class="card-title">Data Produk</h5>
+                    <h5 class="card-title">Data Pesanan</h5>
                 </div>
                 {{-- <div class="col-6"> --}}
                 <div class="col-6 mt-3" style="text-align: right">
-                    <button class="btn btn-primary" id="show-product">
-                        Show Data
+                    <button class="btn btn-primary" id="show-product" data-bs-toggle="modal" data-bs-target="#modalAdd">
+                        Tambah Data
                     </button>
                 </div>
                 {{-- </div> --}}
             </div>
 
               <!-- Table with stripped rows -->
-              <table class="table table-striped" id="table-product">
+              <table class="table table-striped" id="table-order">
                 <thead>
                   <tr>
-                    <th scope="col">Imange</th>
-                    <th scope="col">Title</th>
-                    <th scope="col">Category</th>
-                    <th scope="col">Brand</th>
-                    <th scope="col">Stock</th>
-                    <th scope="col">Price</th>
+                    <th scope="col">No. Pesanan</th>
+                    <th scope="col">Tanggal</th>
+                    <th scope="col">Suplier</th>
+                    <th scope="col">Produk</th>
+                    <th scope="col">Total</th>
                     <th scope="col" class="text-center">Action</th>
                   </tr>
                 </thead>
                 <tbody>
+                    @foreach ($data as $val)
+                        <tr>
+                            <td>{{ $val->no_pesanan }}</td>
+                            <td>{{ $val->tanggal }}</td>
+                            <td>{{ $val->nm_supplier }}</td>
+                            <td>{{ $val->nm_produk }}</td>
+                            <td>{{ $val->total }}</td>
+                            <td class="text-center">
+                                <div class="row">
+                                    <div class="col-6" style="padding-right: 5px;">
+                                        <button class="btn btn-warning btn-sm waves-effect" id="btn-detail" data-id="{{ $val->id }}" style="float: right"><i class="bi bi-pencil-fill"></i></button>
+                                    </div>
+                                    <div class="col-6" style="padding: 0; margin: 0">
+                                        <form action="{{ route('delete-data') }}" method="POST">
+                                            @csrf
+                                            <input type="hidden" name="id" value="{{ $val->id }}">
+                                            <button type="button" class="btn btn-danger btn-sm waves-effect" id="btn-delete" style="float: left"><i class="bi bi-trash"></i></button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    @endforeach
                 </tbody>
               </table>
 
@@ -348,71 +374,85 @@
 
       <!-- Modal -->
       
-        <div class="modal fade" id="modalView" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-          <div class="modal-dialog modal-lg">
+        <div class="modal fade" id="modalAdd" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+          <div class="modal-dialog">
               <div class="modal-content">
-                  {{-- <div class="modal-header">
+                  <div class="modal-header">
+                      <h5 class="modal-title" id="exampleModalLabel">Tambah Data</h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                  </div>
+                  <div class="modal-body">
+                    <form action="{{ route('create-data') }}" method="POST">
+                        @csrf
+                        <div class="mb-3">
+                            <label for="" class="form-label">No. Pesanan</label>
+                            <input type="text" class="form-control" name="no_pesanan" id="no_pesanan" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="" class="form-label">Tanggal</label>
+                            <input type="date" class="form-control" name="tanggal" id="tanggal" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="" class="form-label">Nama Supplier</label>
+                            <input type="text" class="form-control" name="nama_supplier" id="nama_supplier" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="" class="form-label">Nama Produk</label>
+                            <input type="text" class="form-control" name="nama_produk" id="nama_produk" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="" class="form-label">Total</label>
+                            <input type="text" class="form-control" name="harga" id="harga" required>
+                        </div>
+                        <div style="float: right">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button type="submit" class="btn btn-primary" id="btn-update">Save</button>
+                        </div>
+                    </form>
+                  </div>
+                  {{-- <div class="modal-footer">
+                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                      <button type="button" class="btn btn-primary" id="btn-update">Save changes</button>
+                  </div> --}}
+              </div>
+          </div>
+      </div>
+        <div class="modal fade" id="modalUpdate" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+          <div class="modal-dialog">
+              <div class="modal-content">
+                  <div class="modal-header">
                       <h5 class="modal-title" id="exampleModalLabel">Detail</h5>
                       <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                  </div> --}}
+                  </div>
                   <div class="modal-body">
-                      <div class="row">
-                        <div class="col-6">
-                            <p style="font-size: 20px; font-weight: bold" id="title">Iphone X</p>
+                    <form action="{{ route('update-data') }}" method="POST">
+                        @csrf
+                        <input type="hidden" name="id" id="id">
+                        <div class="mb-3">
+                            <label for="" class="form-label">No. Pesanan</label>
+                            <input type="text" class="form-control" name="update_no_pesanan" id="update_no_pesanan" required>
                         </div>
-                        <div class="col-6">
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="float: right"></button>
+                        <div class="mb-3">
+                            <label for="" class="form-label">Tanggal</label>
+                            <input type="date" class="form-control" name="update_tanggal" id="update_tanggal" required>
                         </div>
-                        <div class="col-6">
-                            <img src="" id="thumbnail" alt="" style="width: 100%; max-height: 350px">
-                            <div class="row mt-3">
-                                <div class="col-3">
-                                    <img src="" id="img-1" alt="" style="width: 100%; max-height: 80px">
-                                </div>
-                                <div class="col-3">
-                                    <img src="" id="img-2" alt="" style="width: 100%; max-height: 80px">
-                                </div>
-                                <div class="col-3">
-                                    <img src="" id="img-3" alt="" style="width: 100%; max-height: 80px">
-                                </div>
-                                <div class="col-3">
-                                    <img src="" id="img-4" alt="" style="width: 100%; max-height: 80px">
-                                </div>
-                            </div>
+                        <div class="mb-3">
+                            <label for="" class="form-label">Nama Supplier</label>
+                            <input type="text" class="form-control" name="update_nama_supplier" id="update_nama_supplier" required>
                         </div>
-                        <div class="col-6">
-                            <div class="row">
-                                <div class="col-6" style="font-size: 21px">
-                                    Price: $<span id="price"></span>
-                                </div>
-                                <div class="col-6" id="rating">
-                                    <span><i class="fa-solid fa-star fa-xl"></i></span>
-                                    <span><i class="fa-solid fa-star-half-stroke fa-xl"></i></span>
-                                    <span><i class="fa-sharp fa-regular fa-star fa-xl"></i></span>
-                                    <span><i class="fa-sharp fa-regular fa-star fa-xl"></i></span>
-                                    <span><i class="fa-sharp fa-regular fa-star fa-xl"></i></span>
-                                </div>
-                                <div class="col-3" style="font-size: 14px">
-                                    Category:
-                                </div>
-                                <div class="col-9" id="category" style="font-size: 14px">
-                                    Smartphone dummy
-                                </div>
-                                <div class="col-3" style="font-size: 14px">
-                                    Stock:
-                                </div>
-                                <div class="col-9" id="stock" style="font-size: 14px">
-                                    999 dummy
-                                </div>
-                                <div class="col-3" style="font-size: 14px">
-                                    Description:
-                                </div>
-                                <div class="col-9" style="font-size: 14px" id="description">
-                                    SIM-Free, Model A19211 6.5-inch Super Retina HD display with OLED technology A12 Bionic chip with dummy
-                                </div>
-                            </div>
+                        <div class="mb-3">
+                            <label for="" class="form-label">Nama Produk</label>
+                            <input type="text" class="form-control" name="update_nama_produk" id="update_nama_produk" required>
                         </div>
-                      </div>
+                        <div class="mb-3">
+                            <label for="" class="form-label">Total</label>
+                            <input type="text" class="form-control" name="update_harga" id="update_harga" required>
+                        </div>
+                        <div style="float: right">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button type="submit" class="btn btn-primary" id="btn-update">Save</button>
+                        </div>
+                    </form>
                   </div>
                   {{-- <div class="modal-footer">
                       <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -446,166 +486,79 @@
 
   <script>
     jQuery(function($) {      
-        $('#table-product').DataTable()
-        let list_data = () => {
-            $('#table-product tbody').empty()
-            $.ajax({
-                url: 'https://dummyjson.com/products',
-                method: 'GET',
-                success: function(resp) {
-                    if (resp.products.length != 0) {
-                        $.each(resp.products, function(key, val) {
-                            $('#table-product').append(
-                                `<tr>
-                                    <td>
-                                        <img src="${val.thumbnail}" style="height: 80px;">
-                                    </td>
-                                    <td>${val.title}</td>
-                                    <td>${val.category}</td>
-                                    <td>${val.brand}</td>
-                                    <td>${val.stock}</td>
-                                    <td>${val.price}</td>
-                                    <td class="text-center">
-                                        <button type="button" class="btn btn-primary btn-sm waves-effect" id="btn-edit" data-id="${val.id}">View</button>
-                                    </td>
-                                </tr>`
-                            )
-                        })
-                    } else {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: 'Data Not Found',
-                            // footer: '<a href="">Why do I have this issue?</a>'
-                        })   
-                    }
-                },
-                complete: function() {
-                    $('#table-product').DataTable()
-                }
-            })
+        $('#table-order').DataTable()
+
+        let err = "{{ $session_error }}";
+        let scc = "{{ $session_success }}";
+        // console.log(err);
+        const toastMixin = Swal.mixin({
+            toast: true,
+            icon: "success",
+            title: "General Title",
+            animation: false,
+            position: "top-right",
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener("mouseenter", Swal.stopTimer);
+                toast.addEventListener("mouseleave", Swal.resumeTimer);
+            },
+        });
+        
+        if (err) {
+            toastMixin.fire({
+                icon: "warning",
+                title: err,
+            });
         }
 
-        $('#show-product').on('click', function() {
-            $('#table-product').dataTable().fnDestroy()
-            list_data()
-        })
+        if (scc) {
+            toastMixin.fire({
+                icon: "success",
+                title: scc,
+            });
+        }
 
-        $('#table-product tbody').on('click', '#btn-edit', function() {
+        $('#table-order tbody').on('click', '#btn-detail', function() {
             let idx = $(this).data('id')
             $.ajax({
-                url: `https://dummyjson.com/products/${idx}`,
+                url: '/api/detail_data',
                 method: 'GET',
+                data: {
+                    id: idx
+                },
                 success: function(resp) {
-                    console.log(resp);
-                    $('#title').html(resp.title)
-                    $('#thumbnail').attr('src', resp.thumbnail)
-                    $('#price').html(resp.price)
-                    $('#category').html(resp.category)
-                    $('#stock').html(resp.stock)
-                    $('#description').html(resp.description)
-                    $('#img-1').attr('src', resp.images[0])
-                    $('#img-2').attr('src', resp.images[1])
-                    $('#img-3').attr('src', resp.images[2])
-                    $('#img-4').attr('src', resp.images[3])
 
-                    $('#rating').empty()
-                    if (resp.rating < 1) {
-                        $('#rating').append(
-                            `<span><i class="fa-solid fa-star-half-stroke fa-xl"></i></span>
-                            <span><i class="fa-sharp fa-regular fa-star fa-xl"></i></span>
-                            <span><i class="fa-sharp fa-regular fa-star fa-xl"></i></span>
-                            <span><i class="fa-sharp fa-regular fa-star fa-xl"></i></span>
-                            <span><i class="fa-sharp fa-regular fa-star fa-xl"></i></span>`
-                        )
-                    } 
-                    else if (resp.rating == 1) {
-                        $('#rating').append(
-                            `<span><i class="fa-solid fa-star fa-xl"></i></span>
-                            <span><i class="fa-sharp fa-regular fa-star fa-xl"></i></span>
-                            <span><i class="fa-sharp fa-regular fa-star fa-xl"></i></span>
-                            <span><i class="fa-sharp fa-regular fa-star fa-xl"></i></span>
-                            <span><i class="fa-sharp fa-regular fa-star fa-xl"></i></span>`
-                        )
-                    } 
-                    else if (resp.rating > 1 && resp.rating < 2) {
-                        $('#rating').append(
-                            `<span><i class="fa-solid fa-star fa-xl"></i></span>
-                            <span><i class="fa-solid fa-star-half-stroke fa-xl"></i></span>
-                            <span><i class="fa-sharp fa-regular fa-star fa-xl"></i></span>
-                            <span><i class="fa-sharp fa-regular fa-star fa-xl"></i></span>
-                            <span><i class="fa-sharp fa-regular fa-star fa-xl"></i></span>`
-                        )
-                    } 
-                    else if (resp.rating == 2) {
-                        $('#rating').append(
-                            `<span><i class="fa-solid fa-star fa-xl"></i></span>
-                            <span><i class="fa-solid fa-star fa-xl"></i></span>
-                            <span><i class="fa-sharp fa-regular fa-star fa-xl"></i></span>
-                            <span><i class="fa-sharp fa-regular fa-star fa-xl"></i></span>
-                            <span><i class="fa-sharp fa-regular fa-star fa-xl"></i></span>`
-                        )
-                    }
-                    else if (resp.rating > 2 && resp.rating < 3) {
-                        $('#rating').append(
-                            `<span><i class="fa-solid fa-star fa-xl"></i></span>
-                            <span><i class="fa-solid fa-star fa-xl"></i></span>
-                            <span><i class="fa-solid fa-star-half-stroke fa-xl"></i></span>
-                            <span><i class="fa-sharp fa-regular fa-star fa-xl"></i></span>
-                            <span><i class="fa-sharp fa-regular fa-star fa-xl"></i></span>`
-                        )
-                    }
-                    else if (resp.rating == 3) {
-                        $('#rating').append(
-                            `<span><i class="fa-solid fa-star fa-xl"></i></span>
-                            <span><i class="fa-solid fa-star fa-xl"></i></span>
-                            <span><i class="fa-solid fa-star fa-xl"></i></span>
-                            <span><i class="fa-sharp fa-regular fa-star fa-xl"></i></span>
-                            <span><i class="fa-sharp fa-regular fa-star fa-xl"></i></span>`
-                        )
-                    }
-                    else if (resp.rating > 3 && resp.rating < 4) {
-                        $('#rating').append(
-                            `<span><i class="fa-solid fa-star fa-xl"></i></span>
-                            <span><i class="fa-solid fa-star fa-xl"></i></span>
-                            <span><i class="fa-solid fa-star fa-xl"></i></span>
-                            <span><i class="fa-solid fa-star-half-stroke fa-xl"></i></span>
-                            <span><i class="fa-sharp fa-regular fa-star fa-xl"></i></span>`
-                        )
-                    }
-                    else if (resp.rating == 4) {
-                        $('#rating').append(
-                            `<span><i class="fa-solid fa-star fa-xl"></i></span>
-                            <span><i class="fa-solid fa-star fa-xl"></i></span>
-                            <span><i class="fa-solid fa-star fa-xl"></i></span>
-                            <span><i class="fa-solid fa-star fa-xl"></i></span>
-                            <span><i class="fa-sharp fa-regular fa-star fa-xl"></i></span>`
-                        )
-                    }
-                    else if (resp.rating > 4 && resp.rating < 5) {
-                        $('#rating').append(
-                            `<span><i class="fa-solid fa-star fa-xl"></i></span>
-                            <span><i class="fa-solid fa-star fa-xl"></i></span>
-                            <span><i class="fa-solid fa-star fa-xl"></i></span>
-                            <span><i class="fa-solid fa-star fa-xl"></i></span>
-                            <span><i class="fa-solid fa-star-half-stroke fa-xl"></i></span>`
-                        )
-                    }
-                    else if (resp.rating == 5) {
-                        $('#rating').append(
-                            `<span><i class="fa-solid fa-star fa-xl"></i></span>
-                            <span><i class="fa-solid fa-star fa-xl"></i></span>
-                            <span><i class="fa-solid fa-star fa-xl"></i></span>
-                            <span><i class="fa-solid fa-star fa-xl"></i></span>
-                            <span><i class="fa-solid fa-star fa-xl"></i></span>`
-                        )
-                    }
+                    $('#id').val(resp.id)
+                    $('#update_no_pesanan').val(resp.no_pesanan)
+                    $('#update_tanggal').val(resp.tanggal)
+                    $('#update_nama_supplier').val(resp.nm_supplier)
+                    $('#update_nama_produk').val(resp.nm_produk)
+                    $('#update_harga').val(resp.total)
 
-                    $('#modalView').modal('show')
+                    $('#modalUpdate').modal('show')
                 }
             })
         })
-        
+
+        $('#table-order tbody').on('click', '#btn-delete', function() {
+            let form = $(this).parents('form')
+            Swal.fire({
+            title: 'Are you sure?',
+            text: "You won't be able to revert this!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, delete it!'
+          }).then((result) => {
+            if (result.isConfirmed) {
+                form.submit()
+            }
+          })
+        })
+
     })
   </script>
 
